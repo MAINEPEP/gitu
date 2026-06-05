@@ -1,0 +1,140 @@
+--[ CONQUEROR SCRIPT - EVADE SPAM JUMP & SLIDE ]
+--[ UNTUK RAMZIEE - NO MERCY ]
+
+local player = game.Players.LocalPlayer
+local userInput = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+-- Variabel
+local spamActive = false
+local spamJump = true
+local spamSlide = true
+local guiVisible = true
+
+-- Fungsi untuk Jump
+local function doJump()
+    userInput:SendKeyEvent("Jump", true, false)
+    task.wait(0.02)
+    userInput:SendKeyEvent("Jump", false, false)
+end
+
+-- Fungsi untuk Slide (Shift Lock / Ctrl kebanyakan pake Ctrl)
+local function doSlide()
+    userInput:SendKeyEvent("LeftControl", true, false)
+    task.wait(0.02)
+    userInput:SendKeyEvent("LeftControl", false, false)
+end
+
+-- Loop spam
+local function startSpam()
+    spawn(function()
+        while spamActive do
+            if spamJump then
+                doJump()
+            end
+            if spamSlide then
+                doSlide()
+            end
+            task.wait(0.03) -- 30ms delay biar ga ketauan
+        end
+    end)
+end
+
+-- ========== GUI SIMPEL BUKA-TUTUP ==========
+local screenGui = Instance.new("ScreenGui")
+local toggleButton = Instance.new("ImageButton")  -- pake Image biar kaya ikon
+local redLine = Instance.new("Frame")
+
+-- GUI Settings
+screenGui.Name = "ConquerorGUI"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+-- Ikon lingkaran (bisa diganti pake gambar atau korner)
+toggleButton.Size = UDim2.new(0, 50, 0, 50)
+toggleButton.Position = UDim2.new(0, 20, 0, 100)
+toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+toggleButton.BackgroundTransparency = 0.2
+toggleButton.BorderSizePixel = 0
+
+-- Bikin jadi lingkaran
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = toggleButton
+
+-- Teks di dalam ikon (pake TextLabel)
+local buttonText = Instance.new("TextLabel")
+buttonText.Size = UDim2.new(1, 0, 1, 0)
+buttonText.BackgroundTransparency = 1
+buttonText.Text = "SPAM"
+buttonText.TextColor3 = Color3.fromRGB(255, 255, 255)
+buttonText.TextSize = 12
+buttonText.Font = Enum.Font.GothamBold
+buttonText.TextScaled = true
+buttonText.Parent = toggleButton
+
+-- GARIS MERAH (berkedip/keluar saat spam aktif)
+redLine.Size = UDim2.new(0, 50, 0, 3)
+redLine.Position = UDim2.new(0, 20, 0, 155)
+redLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+redLine.BackgroundTransparency = 1
+redLine.BorderSizePixel = 0
+redLine.Parent = screenGui
+
+-- Efek garis merah berkedip
+spawn(function()
+    while true do
+        if spamActive then
+            redLine.BackgroundTransparency = 0
+            redLine.Size = UDim2.new(0, 50, 0, 3)
+            task.wait(0.2)
+            redLine.Size = UDim2.new(0, 55, 0, 3)
+            task.wait(0.2)
+        else
+            redLine.BackgroundTransparency = 1
+        end
+        task.wait(0.05)
+    end
+end)
+
+-- Fungsi toggle GUI (sembunyikan/tampilkan)
+local function toggleGUI()
+    guiVisible = not guiVisible
+    toggleButton.Visible = guiVisible
+    if guiVisible then
+        redLine.Visible = true
+    else
+        redLine.Visible = false
+    end
+end
+
+-- Toggle spam saat ikon diklik
+toggleButton.MouseButton1Click:Connect(function()
+    spamActive = not spamActive
+    if spamActive then
+        buttonText.Text = "ON"
+        buttonText.TextColor3 = Color3.fromRGB(0, 255, 0)
+        startSpam()
+    else
+        buttonText.Text = "OFF"
+        buttonText.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+-- BUKA-TUTUP GUI pake tombol 'G' (bisa ganti)
+userInput.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.G then
+        toggleGUI()
+    end
+end)
+
+-- Anti AFK biar ga kekick
+local vu = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(0.3)
+    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+print("[CONQUEROR] Script aktif | Tekan G buka/tutup GUI | Klik ikon merah buat spam")
